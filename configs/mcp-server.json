@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "contact-management": {
+      "command": "go",
+      "args": ["run", "./cmd/mcp-server/main.go"],
+      "cwd": ".",
+      "env": {
+        "DB_HOST": "localhost",
+        "DB_PORT": "3306",
+        "DB_NAME": "mejona_contacts",
+        "DB_USER": "root",
+        "DB_PASSWORD": "",
+        "APP_DEBUG": "false"
+      }
+    }
+  }
+}

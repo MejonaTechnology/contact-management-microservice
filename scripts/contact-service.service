@@ -1,0 +1,50 @@
+[Unit]
+Description=Mejona Contact Management Microservice
+Documentation=https://github.com/mejonatechnology/contact-management-microservice
+After=network.target mysql.service redis.service
+Wants=mysql.service redis.service
+
+[Service]
+Type=simple
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/opt/mejona/contact-management-microservice
+ExecStart=/opt/mejona/contact-management-microservice/contact-service
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+
+# Environment
+Environment=PATH=/usr/local/go/bin:/usr/bin:/bin
+EnvironmentFile=/opt/mejona/contact-management-microservice/.env
+
+# Security settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/mejona/contact-management-microservice/logs
+ReadWritePaths=/opt/mejona/contact-management-microservice/uploads
+ReadWritePaths=/opt/mejona/contact-management-microservice/temp
+
+# Process limits
+LimitNOFILE=65536
+LimitNPROC=4096
+LimitCORE=0
+
+# Memory limits
+MemoryAccounting=yes
+MemoryMax=512M
+
+# CPU limits
+CPUAccounting=yes
+CPUQuota=80%
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=contact-service
+
+[Install]
+WantedBy=multi-user.target

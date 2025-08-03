@@ -1,0 +1,187 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+contact-service
+contact-service-*
+main
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+coverage.out
+coverage.html
+
+# Dependency directories (remove the comment below to include it)
+vendor/
+
+# Go workspace file
+go.work
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Environment and configuration files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.pem
+*.key
+*.crt
+
+# Log files
+*.log
+logs/
+*.log.*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker related
+.dockerignore
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# nyc test coverage
+.nyc_output
+
+# Grunt intermediate storage
+.grunt
+
+# Bower dependency directory
+bower_components
+
+# node_modules (if using Node.js tools)
+node_modules/
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# Upload directories
+uploads/
+files/
+
+# Generated documentation
+docs/swagger.json
+docs/swagger.yaml
+
+# Build artifacts
+build/
+dist/
+out/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Archive files
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Local development overrides
+docker-compose.override.yml
+
+# Certificate files
+ssl/
+certs/
+
+# Redis dump file
+dump.rdb
+
+# MySQL data directory (if running locally)
+mysql_data/
+
+# Prometheus data
+prometheus_data/
+
+# Grafana data
+grafana_data/
+
+# Test fixtures (keep structure but ignore data)
+testdata/**/*.json
+testdata/**/*.yaml
+testdata/**/*.yml
+!testdata/**/example.*
+
+# Air live reload tool
+.air.toml
+
+# GoLand
+.idea/
+
+# VS Code
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# Migration tracking (if using custom migration tool)
+.migrate/
+
+# Performance profiling
+*.prof
+*.cpu
+*.mem
+
+# Delve debugger
+__debug_bin
