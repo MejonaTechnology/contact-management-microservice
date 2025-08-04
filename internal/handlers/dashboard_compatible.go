@@ -40,7 +40,7 @@ func (h *DashboardContactHandler) GetContactSubmissions(c *gin.Context) {
 
 	offset := (page - 1) * limit
 
-	query := h.db.Model(&models.ContactSubmission{})
+	query := h.db.Model(&models.Contact{}).Where("deleted_at IS NULL")
 
 	// Apply filters
 	if status != "" {
@@ -48,8 +48,8 @@ func (h *DashboardContactHandler) GetContactSubmissions(c *gin.Context) {
 	}
 
 	if search != "" {
-		query = query.Where("name LIKE ? OR email LIKE ? OR subject LIKE ?",
-			"%"+search+"%", "%"+search+"%", "%"+search+"%")
+		query = query.Where("first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR subject LIKE ?",
+			"%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%")
 	}
 
 	// Get total count
@@ -57,7 +57,7 @@ func (h *DashboardContactHandler) GetContactSubmissions(c *gin.Context) {
 	query.Count(&total)
 
 	// Get paginated results
-	var contacts []models.ContactSubmission
+	var contacts []models.Contact
 	if err := query.Offset(offset).Limit(limit).
 		Order("created_at DESC").
 		Find(&contacts).Error; err != nil {
@@ -79,8 +79,8 @@ func (h *DashboardContactHandler) GetContactSubmissions(c *gin.Context) {
 func (h *DashboardContactHandler) GetContactSubmission(c *gin.Context) {
 	id := c.Param("id")
 	
-	var contact models.ContactSubmission
-	if err := h.db.First(&contact, id).Error; err != nil {
+	var contact models.Contact
+	if err := h.db.Where("deleted_at IS NULL").First(&contact, id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Contact not found"})
 			return
@@ -110,15 +110,49 @@ func (h *DashboardContactHandler) CreateContactSubmission(c *gin.Context) {
 		return
 	}
 
-	// Create contact submission
-	contact := models.ContactSubmission{
-		Name:    req.Name,
-		Email:   req.Email,
-		Phone:   req.Phone,
-		Subject: req.Subject,
-		Message: req.Message,
-		Source:  req.Source,
-		Status:  "new",
+	// Convert simple form request to full Contact model for contacts table
+	contact := &models.Contact{
+		FirstName:             req.Name,
+		Email:                 req.Email,
+		Phone:                 req.Phone,
+		Subject:               req.Subject,
+		Message:               &req.Message,
+		ContactTypeID:         1, // General Inquiry
+		ContactSourceID:       1, // Website
+		Status:                models.StatusNew,
+		Priority:              models.PriorityMedium,
+		Country:               "India",
+		PreferredContactMethod: models.ContactMethodEmail,
+		DataSource:            "form",
+		DataProcessingConsent: true,
+	}
+	
+	// Handle name parsing for first_name/last_name
+	if len(req.Name) > 0 {
+		parts := strings.Fields(req.Name)
+		if len(parts) > 1 {
+			contact.FirstName = parts[0]
+			lastNameStr := strings.Join(parts[1:], " ")
+			contact.LastName = &lastNameStr
+		}
+	}
+	
+	// Set source if provided
+	if req.Source != nil {
+		contact.UTMSource = req.Source
+	}
+	
+	// Set additional fields from request context
+	if clientIP := c.ClientIP(); clientIP != "" {
+		contact.IPAddress = &clientIP
+	}
+	
+	if userAgent := c.GetHeader("User-Agent"); userAgent != "" {
+		contact.UserAgent = &userAgent
+	}
+	
+	if referer := c.GetHeader("Referer"); referer != "" {
+		contact.ReferrerURL = &referer
 	}
 
 	if err := h.db.Create(&contact).Error; err != nil {
