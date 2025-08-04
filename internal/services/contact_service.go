@@ -523,10 +523,9 @@ func (s *ContactService) validateContactTypeAndSource(typeID, sourceID uint) err
 func (s *ContactService) checkForDuplicates(email string, phone *string) (*models.Contact, error) {
 	var contact models.Contact
 	
+	// Check for duplicate email only (primary key for contacts)
+	// Phone numbers can be shared across family members or businesses
 	query := s.db.Where("email = ? AND deleted_at IS NULL", email)
-	if phone != nil && *phone != "" {
-		query = query.Or("phone = ? AND deleted_at IS NULL", *phone)
-	}
 	
 	if err := query.First(&contact).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
