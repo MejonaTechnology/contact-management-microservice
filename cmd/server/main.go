@@ -68,6 +68,7 @@ func main() {
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler()
 	dashboardHandler := handlers.NewDashboardContactHandler()
+	contactHandler := handlers.NewContactHandler()
 
 	// ===== HEALTH CHECK ENDPOINTS =====
 	router.GET("/health", simpleHealthCheck)
@@ -100,10 +101,10 @@ func main() {
 			auth.GET("/validate", middleware.AuthMiddleware(), authHandler.ValidateToken)
 		}
 
-		// Public contact submission endpoints
+		// Public contact submission endpoints (uses full contacts table with CRM)
 		public := api.Group("/public")
 		{
-			public.POST("/contact", dashboardHandler.CreateContactSubmission)
+			public.POST("/contact", contactHandler.SubmitContact)
 		}
 
 		// Test endpoint
