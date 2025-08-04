@@ -4,6 +4,7 @@ import (
 	"contact-service/internal/models"
 	"contact-service/internal/services"
 	"contact-service/pkg/logger"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -549,16 +550,67 @@ type StatusUpdateRequest struct {
 // @Failure 500 {object} APIResponse
 // @Router /public/contact [post]
 func (h *ContactHandler) SubmitContact(c *gin.Context) {
-	var req models.PublicContactRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Warn("Invalid public contact submission", map[string]interface{}{
+	// Get raw JSON data
+	body, err := c.GetRawData()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, NewErrorResponse("Failed to read request body", err.Error()))
+		return
+	}
+	
+	// Try to parse as new PublicContactRequest format first
+	var pubReq models.PublicContactRequest
+	if err := json.Unmarshal(body, &pubReq); err == nil {
+		// Check if required fields for new format are present
+		if pubReq.FirstName != "" && pubReq.Email != "" && pubReq.Message != "" {
+			h.submitContactNewFormat(c, &pubReq)
+			return
+		}
+	}
+	
+	// Fall back to old ContactSubmissionRequest format for backward compatibility
+	var oldReq models.ContactSubmissionRequest
+	if err := json.Unmarshal(body, &oldReq); err != nil {
+		logger.Warn("Invalid contact submission - neither new nor old format", map[string]interface{}{
 			"error": err.Error(),
 			"ip":    c.ClientIP(),
 		})
 		c.JSON(http.StatusBadRequest, NewErrorResponse("Invalid contact form data", err.Error()))
 		return
 	}
+	
+	// Convert old format to new format
+	firstName := oldReq.Name
+	var lastName *string
+	
+	// Parse name into first_name and last_name
+	if strings.Contains(oldReq.Name, " ") {
+		parts := strings.Fields(oldReq.Name)
+		if len(parts) > 1 {
+			firstName = parts[0]
+			lastNameStr := strings.Join(parts[1:], " ")
+			lastName = &lastNameStr
+		}
+	}
+	
+	// Convert to PublicContactRequest format
+	convertedReq := models.PublicContactRequest{
+		FirstName:        firstName,
+		LastName:         lastName,
+		Email:            oldReq.Email,
+		Phone:            oldReq.Phone,
+		Subject:          oldReq.Subject,
+		Message:          oldReq.Message,
+		ContactTypeID:    nil, // Will use default
+		ContactSourceID:  nil, // Will use default  
+		MarketingConsent: nil, // Will use default
+		Website:          oldReq.Website, // Honeypot field
+	}
+	
+	h.submitContactNewFormat(c, &convertedReq)
+}
 
+// submitContactNewFormat handles the actual contact submission logic
+func (h *ContactHandler) submitContactNewFormat(c *gin.Context, req *models.PublicContactRequest) {
 	// Honeypot spam detection
 	if req.Website != "" {
 		logger.LogSecurityEvent("spam_detected", nil, c.ClientIP(), map[string]interface{}{
