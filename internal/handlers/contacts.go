@@ -642,6 +642,22 @@ func (h *ContactHandler) submitContactNewFormat(c *gin.Context, req *models.Publ
 	logger.LogAPIRequest(c.Request.Method, c.Request.URL.Path, nil, duration, http.StatusCreated)
 
 	if err != nil {
+		// Check if this is a duplicate email error
+		if strings.Contains(err.Error(), "already exists") {
+			logger.Warn("Duplicate contact submission", map[string]interface{}{
+				"email": req.Email,
+				"ip":    c.ClientIP(),
+				"error": err.Error(),
+			})
+			// Return success response for user experience, but log the duplicate
+			c.JSON(http.StatusCreated, NewSuccessResponse("Contact form submitted successfully", gin.H{
+				"contact_id": 0, // Indicate this was a duplicate
+				"message":    "Thank you for contacting us. We already have your information and will get back to you soon!",
+				"duplicate":  true,
+			}))
+			return
+		}
+		
 		logger.Error("Failed to create public contact", err, map[string]interface{}{
 			"email": req.Email,
 			"ip":    c.ClientIP(),
