@@ -649,11 +649,13 @@ func (h *ContactHandler) submitContactNewFormat(c *gin.Context, req *models.Publ
 				"ip":    c.ClientIP(),
 				"error": err.Error(),
 			})
-			// Return success response for user experience, but log the duplicate
-			c.JSON(http.StatusCreated, NewSuccessResponse("Contact form submitted successfully", gin.H{
+			// Return informative response about duplicate submission
+			c.JSON(http.StatusConflict, NewSuccessResponse("Duplicate contact detected", gin.H{
 				"contact_id": 0, // Indicate this was a duplicate
-				"message":    "Thank you for contacting us. We already have your information and will get back to you soon!",
+				"message":    "We already received your contact request and our team will get back to you soon! If this is urgent, please call us directly.",
 				"duplicate":  true,
+				"action_required": "popup", // Signal frontend to show popup
+				"status_message": "Form already submitted using this email address. Our team will get back to you soon.",
 			}))
 			return
 		}

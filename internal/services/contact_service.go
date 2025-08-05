@@ -525,11 +525,14 @@ func (s *ContactService) checkForDuplicates(email string, phone *string) (*model
 	
 	// Check for duplicate email only (primary key for contacts)
 	// Phone numbers can be shared across family members or businesses
-	query := s.db.Where("email = ? AND deleted_at IS NULL", email)
+	// Only consider duplicates if contact is in active status
+	// Allow new submissions if previous contact is "resolved", "closed", or "completed"
+	query := s.db.Where("email = ? AND deleted_at IS NULL", email).
+		Where("status IN (?)", []string{"new", "in_progress", "contacted", "qualified", "follow_up"})
 	
 	if err := query.First(&contact).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil // No duplicates found
+			return nil, nil // No active duplicates found
 		}
 		return nil, err
 	}
